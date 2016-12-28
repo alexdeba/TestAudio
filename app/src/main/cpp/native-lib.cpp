@@ -5,30 +5,17 @@
 #include "native-lib.h"
 
 
-#define CONV16BIT 32768
-#define CONVMYFLT (1./32768.)
-
-
 static void *createThreadLock(void);
-
 static void waitThreadLock(void *lock);
-
 static void notifyThreadLock(void *lock);
-
 static void destroyThreadLock(void *lock);
-
 static void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context);
-
 static void bqRecorderCallback(SLAndroidSimpleBufferQueueItf bq, void *context);
-
 static SLresult openSLRecOpen(opensl_stream_t *p);
-
 static SLresult openSLPlayOpen(opensl_stream_t *p);
 
-#define BUFFERFRAMES 1024
-#define VECSAMPS_MONO 64
-#define VECSAMPS_STEREO 128
-#define SAMPLE_RATE 44100
+#define CONV16BIT 32768
+#define CONVMYFLT (1./32768.)
 
 
 #ifdef __cplusplus
@@ -37,7 +24,7 @@ extern "C" {
 
 
 /*
- * creates the OpenSL ES audio engine
+ * create the OpenSL ES audio engine
  */
 static SLresult openSLCreateEngine(opensl_stream_t *p) {
     SLresult result;
@@ -208,9 +195,8 @@ opensl_stream_t *android_OpenAudioDevice(
 
 /*
  * opens the OpenSL ES device for output
- * source : une buffer queue au format pcm, which is where we will send our audio
- * data samples.
- * sink : un output mix
+ * source : a buffer queue in PCM format, which is where we will send our audio data samples.
+ * sink : an output mix
  */
 static SLresult openSLPlayOpen(opensl_stream_t *p) {
     SLresult result;
@@ -347,8 +333,8 @@ static SLresult openSLPlayOpen(opensl_stream_t *p) {
 
 
 /* Open the OpenSL ES device for input
-* source : l'entrée audio du device Android
-* sink : la buffer queue
+* source : the audio input of the Android device
+* sink : the buffer queue
 */
 static SLresult openSLRecOpen(opensl_stream_t *p) {
 
@@ -643,16 +629,6 @@ int android_AudioOut(opensl_stream_t *p, float *buffer, int size) {
 
 
 
-/*
-
-Java_com_example_alex_testaudio_MainActivity_shutdownEngine(JNIEnv* env, jclass clazz)
- */
-// close the android audio device
-
-
-
-
-
 //----------------------------------------------------------------------
 // thread Locks
 // to ensure synchronisation between callbacks and processing code
@@ -711,6 +687,13 @@ void destroyThreadLock(void *lock) {
     free(p);
 }
 
+//----------------------------------------------------------------
+// the exported functions
+
+#define BUFFERFRAMES 1024
+#define VECSAMPS_MONO 64
+#define VECSAMPS_STEREO 128
+#define SAMPLE_RATE 44100
 
 static int on;
 
