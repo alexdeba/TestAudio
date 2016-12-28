@@ -10,7 +10,7 @@ import android.bluetooth.BluetoothAdapter
 
 class MainActivity : AppCompatActivity() {
 
-	lateinit var thread : Thread
+	lateinit var thread: Thread
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -32,7 +32,6 @@ class MainActivity : AppCompatActivity() {
 		init()
 	}
 
-
 	private fun init() {
 
 /*
@@ -50,16 +49,13 @@ class MainActivity : AppCompatActivity() {
 
 	}
 
-
 	override fun onPause() {
 		super.onPause()
 	}
 
-
 	override fun onDestroy() {
 		super.onDestroy()
 	}
-
 
 	private fun start_recording() {
 
@@ -75,7 +71,7 @@ class MainActivity : AppCompatActivity() {
 		//	startRecording()
 		//startprocess()
 
-		 thread = object : Thread() {
+		thread = object : Thread() {
 			override fun run() {
 				priority = Thread.MAX_PRIORITY
 				startprocess()
@@ -84,7 +80,6 @@ class MainActivity : AppCompatActivity() {
 		thread.start()
 
 	}
-
 
 	private fun stop_recording() {
 		val toast = Toast.makeText(this, "recording stopped", Toast.LENGTH_SHORT)
@@ -112,9 +107,10 @@ class MainActivity : AppCompatActivity() {
 	/**
 	 * A native method that is implemented by the 'native-lib' native library,
 	 * which is packaged with this application.
-*/
+	 */
 
 	external fun startprocess()
+
 	external fun stopprocess()
 
 
@@ -125,6 +121,5 @@ class MainActivity : AppCompatActivity() {
 			System.loadLibrary("native-lib")
 		}
 	}
-
 
 }
