@@ -22,6 +22,11 @@ static SLresult openSLPlayOpen(opensl_stream_t *p);
 extern "C" {
 #endif
 
+#define BUFFERFRAMES 1024
+#define VECSAMPS_MONO 64
+#define VECSAMPS_STEREO 128
+#define SAMPLE_RATE 44100
+
 
 /*
  * create the OpenSL ES audio engine
@@ -687,13 +692,49 @@ void destroyThreadLock(void *lock) {
     free(p);
 }
 
+
+
+//Writes a header to a file that has been opened (take heed that the correct flags
+//must've been used. Binary mode required, then you should choose whether you want to
+//append or overwrite current file
+void write_wav_header(long samples, short channels){
+    struct wavfile filler;
+
+    short short_value;
+
+    strcpy(filler.id, "RIFF");
+    filler.totallength = (samples * channels) + sizeof(struct wavfile) - 8; //81956
+    strcpy(filler.wavefmt, "WAVEfmt ");
+    filler.format = 16;
+    filler.pcm = 1;
+    filler.channels = channels;
+    filler.frequency = SAMPLE_RATE;
+    filler.bits_per_sample = 16;
+    filler.bytes_per_second = filler.channels * filler.frequency * filler.bits_per_sample/8;
+    filler.bytes_by_capture = filler.channels * filler.bits_per_sample / 8;
+    filler.bytes_in_data = samples * filler.channels * filler.bits_per_sample/8;
+    strcpy(filler.data, "data");
+
+    FILE* pcmFile = fopen("/sdcard/rawFile.pcm", "rb");
+    FILE* wavFile = fopen("/sdcard/rawFile.wav", "wb");
+
+    //write header
+    fwrite(&filler, 1, sizeof(filler), wavFile);
+
+    int i;
+    // copy the file
+    for (i=0; i<samples; i++) {
+        fread(&short_value, 2, 1, pcmFile);
+        fwrite(&short_value, 2, 1, wavFile);
+    }
+
+    fclose(wavFile);
+    fclose(pcmFile);
+}
+
+
 //----------------------------------------------------------------
 // the exported functions
-
-#define BUFFERFRAMES 1024
-#define VECSAMPS_MONO 64
-#define VECSAMPS_STEREO 128
-#define SAMPLE_RATE 44100
 
 static int on;
 
@@ -702,26 +743,44 @@ Java_com_example_alex_testaudio_MainActivity_startprocess() {
     opensl_stream_t *p;
     int samps, i, j;
     float inbuffer[VECSAMPS_MONO], outbuffer[VECSAMPS_STEREO];
+    FILE* pcmFile = fopen("/sdcard/rawFile.pcm", "wb");
+
+    short local_buffer[2000];
 
     p = android_OpenAudioDevice(SAMPLE_RATE, 1, 2, BUFFERFRAMES);
 
     if (p == NULL) return;
 
     on = 1;
-    double sumLevel = 0;
+    long total_samples = 0;
+    int length_in_buffer = p->inBufSamples;
 
     while (on) {
         samps = android_AudioIn(p, inbuffer, VECSAMPS_MONO);
-        sumLevel = 0;
         for (i = 0, j = 0; i < samps; i++, j += 2) {
             outbuffer[j] = outbuffer[j + 1] = inbuffer[i];
-            sumLevel += inbuffer[i];
+            total_samples += samps;
         }
+
+        if (pcmFile) {
+            for (i = 0; i < samps * 2; i++) {
+                local_buffer[i++] = (short) (outbuffer[i] * CONV16BIT);
+            }
+            fwrite(local_buffer, samps * 2, 1, pcmFile);
+        }
+
         android_AudioOut(p, outbuffer, samps * 2);
+
     }
 
     android_CloseAudioDevice(p);
+    fclose(pcmFile);
+
+    write_wav_header(total_samples, 2);
+
 }
+
+
 
 
 JNIEXPORT void JNICALL

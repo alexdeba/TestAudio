@@ -29,15 +29,15 @@ class MainActivity : AppCompatActivity() {
 
 	private fun init() {
 
-		// activate bluetooth if not active
-
-		if (!Build.FINGERPRINT.startsWith("generic")) { // bluetooth not supported on the emulator
-
-			val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-			if (!mBluetoothAdapter.isEnabled) {
-				mBluetoothAdapter.enable()
-			}
-		}
+//		// activate bluetooth if not active
+//
+//		if (!Build.FINGERPRINT.startsWith("generic")) { // bluetooth not supported on the emulator
+//
+//			val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+//			if (!mBluetoothAdapter.isEnabled) {
+//				mBluetoothAdapter.enable()
+//			}
+//		}
 	}
 
 
