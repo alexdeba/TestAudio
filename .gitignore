@@ -3,6 +3,7 @@
 ### Example user template
 
 # IntelliJ project files
+/app/app.iml
 .idea
 *.iml
 out
@@ -30,3 +31,4 @@ build/
 gradle/
 gradlew
 gradlew.bat
+
