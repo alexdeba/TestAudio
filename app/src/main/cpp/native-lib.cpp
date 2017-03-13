@@ -27,6 +27,7 @@ extern "C" {
 #define VECSAMPS_STEREO 128
 #define SAMPLE_RATE 44100
 
+FILE* pcmFile;
 
 /*
  * create the OpenSL ES audio engine
@@ -264,7 +265,11 @@ static SLresult openSLPlayOpen(opensl_stream_t *p) {
 
         if (result != SL_RESULT_SUCCESS) return result;
 
-        // realize the output mix
+
+        /***************************/
+        /*  realize the output mix */
+        /***************************/
+
         result = (*p->outputMixObject)->Realize(p->outputMixObject, SL_BOOLEAN_FALSE);
 
         int speakers;
@@ -284,7 +289,7 @@ static SLresult openSLPlayOpen(opensl_stream_t *p) {
 
         SLDataSource audioSrc = {&loc_bufq, &format_pcm};
 
-        // configure audio sink
+        // configure audio output sink
         SLDataLocator_OutputMix loc_outmix = {SL_DATALOCATOR_OUTPUTMIX, p->outputMixObject};
         SLDataSink audioSnk = {&loc_outmix, NULL};
 
@@ -591,6 +596,12 @@ int android_AudioIn(opensl_stream_t *p, float *buffer, int size) {
             (*p->recorderBufferQueue)->Enqueue(p->recorderBufferQueue,
                                                inBuffer,
                                                bufsamps * sizeof(short));
+
+            // Alex
+            if (pcmFile) {
+                fwrite(inBuffer, bufsamps * sizeof(short), 1, pcmFile);
+            }
+
             p->currentInputBuffer = (p->currentInputBuffer ? 0 : 1);
             index = 0;
             inBuffer = p->inputBuffer[p->currentInputBuffer];
@@ -743,9 +754,7 @@ Java_com_example_alex_testaudio_MainActivity_startprocess() {
     opensl_stream_t *p;
     int samps, i, j;
     float inbuffer[VECSAMPS_MONO], outbuffer[VECSAMPS_STEREO];
-    FILE* pcmFile = fopen("/sdcard/rawFile.pcm", "wb");
-
-    short local_buffer[2000];
+    pcmFile = fopen("/sdcard/rawFile.pcm", "wb");
 
     p = android_OpenAudioDevice(SAMPLE_RATE, 1, 2, BUFFERFRAMES);
 
@@ -753,20 +762,12 @@ Java_com_example_alex_testaudio_MainActivity_startprocess() {
 
     on = 1;
     long total_samples = 0;
-    int length_in_buffer = p->inBufSamples;
 
-    while (on) {
+8    while (on) {
         samps = android_AudioIn(p, inbuffer, VECSAMPS_MONO);
         for (i = 0, j = 0; i < samps; i++, j += 2) {
             outbuffer[j] = outbuffer[j + 1] = inbuffer[i];
             total_samples += samps;
-        }
-
-        if (pcmFile) {
-            for (i = 0; i < samps * 2; i++) {
-                local_buffer[i++] = (short) (outbuffer[i] * CONV16BIT);
-            }
-            fwrite(local_buffer, samps * 2, 1, pcmFile);
         }
 
         android_AudioOut(p, outbuffer, samps * 2);
